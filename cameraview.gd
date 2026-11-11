@@ -3,78 +3,79 @@ extends Node2D
 
 @onready var camera: Camera2D = $Camera2D
 
+const MIN_ZOOM := 0.2
+const MAX_ZOOM := 4.0
+
+var touches: Dictionary = {}
 var dragging := false
-var touches := {}
+var last_mouse_position := Vector2.ZERO
 var last_pinch_distance := 0.0
-
-# Camera momentum
-var camera_velocity := Vector2.ZERO
-var friction := 8.0
-var drag_sensitivity := 8.0
-
-
-func _process(delta: float) -> void:
-	camera.position += camera_velocity * delta
-
-	camera_velocity = camera_velocity.lerp(
-		Vector2.ZERO,
-		1.0 - exp(-friction * delta)
-	)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 
-	# MOBILE: Finger pressed or released
+	# TOUCHSCREEN: Finger pressed or released
 	if event is InputEventScreenTouch:
+
 		if event.pressed:
 			touches[event.index] = event.position
 
-			# Stop existing momentum when a new touch begins
-			camera_velocity = Vector2.ZERO
+			# Reset pinch tracking when two fingers are present
+			if touches.size() == 2:
+				last_pinch_distance = _pinch_distance()
+
 		else:
 			touches.erase(event.index)
-			last_pinch_distance = 0.0
 
-		if touches.size() == 2:
-			last_pinch_distance = _pinch_distance()
+			if touches.size() < 2:
+				last_pinch_distance = 0.0
 
-	# MOBILE: Finger movement
+	# TOUCHSCREEN: Finger movement
 	elif event is InputEventScreenDrag:
+
 		if not touches.has(event.index):
 			return
 
+		var previous_position: Vector2 = touches[event.index]
+		touches[event.index] = event.position
+
 		if touches.size() == 1:
-			camera_velocity = -event.relative / camera.zoom.x * drag_sensitivity
+			# Direct one-finger movement
+			var movement = event.position - previous_position
+			camera.position -= movement / camera.zoom.x
 
 		elif touches.size() == 2:
-			touches[event.index] = event.position
-
-			var distance = _pinch_distance()
+			# Two-finger pinch zoom
+			var new_distance = _pinch_distance()
 
 			if last_pinch_distance > 0.0:
-				zoom_map(distance / last_pinch_distance)
+				var zoom_factor = new_distance / last_pinch_distance
+				zoom_map(zoom_factor)
 
-			last_pinch_distance = distance
+			last_pinch_distance = new_distance
 
-	# PC TESTING: Mouse controls
+	# MOUSE: PC testing
 	elif event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			dragging = event.pressed
+			last_mouse_position = event.position
+
+		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			zoom_map(0.9)
 
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			zoom_map(1.1)
 
-		elif event.button_index == MOUSE_BUTTON_LEFT:
-			dragging = event.pressed
-
-			if dragging:
-				camera_velocity = Vector2.ZERO
-
 	elif event is InputEventMouseMotion and dragging:
-		camera_velocity = -event.relative / camera.zoom.x * drag_sensitivity
+
+		var movement = event.position - last_mouse_position
+		camera.position -= movement / camera.zoom.x
+		last_mouse_position = event.position
 
 
 func _pinch_distance() -> float:
+
 	if touches.size() != 2:
 		return 0.0
 
@@ -83,5 +84,11 @@ func _pinch_distance() -> float:
 
 
 func zoom_map(amount: float) -> void:
-	var new_zoom = clamp(camera.zoom.x * amount, 0.2, 4.0)
+
+	var new_zoom = clamp(
+		camera.zoom.x * amount,
+		MIN_ZOOM,
+		MAX_ZOOM
+	)
+
 	camera.zoom = Vector2(new_zoom, new_zoom)
