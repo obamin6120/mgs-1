@@ -5,43 +5,88 @@ extends Sprite2D
 
 const DRAG_THRESHOLD := 12.0
 
+# Touchscreen tracking
+var touches := {}
 var touch_start_position := Vector2.ZERO
-var is_touching := false
-var is_dragging := false
+var touch_candidate_index := -1
+var touch_moved := false
+var multi_touch := false
+
+# Mouse tracking for PC testing
+var mouse_down := false
+var mouse_start_position := Vector2.ZERO
+var mouse_moved := false
 
 
-func _unhandled_input(event):
-	# Touchscreen input
+func _input(event: InputEvent) -> void:
+
+	# MOBILE: Finger pressed or released
 	if event is InputEventScreenTouch:
+
 		if event.pressed:
-			touch_start_position = event.position
-			is_touching = true
-			is_dragging = false
+			touches[event.index] = event.position
+
+			if touches.size() == 1:
+				touch_candidate_index = event.index
+				touch_start_position = event.position
+				touch_moved = false
+				multi_touch = false
+			else:
+				multi_touch = true
+				touch_candidate_index = -1
+
 		else:
-			if is_touching and not is_dragging:
-				select_province(event.position)
+			if event.index == touch_candidate_index:
+				if not touch_moved and not multi_touch:
+					select_province(event.position)
 
-			is_touching = false
-			is_dragging = false
+			touches.erase(event.index)
 
-	# Detect finger movement
+			if touches.is_empty():
+				touch_candidate_index = -1
+				touch_moved = false
+				multi_touch = false
+
+	# MOBILE: Finger movement
 	elif event is InputEventScreenDrag:
-		if is_touching:
+		if touches.has(event.index):
+			touches[event.index] = event.position
+
 			if touch_start_position.distance_to(event.position) > DRAG_THRESHOLD:
-				is_dragging = true
+				touch_moved = true
 
-	# Mouse input for testing
+			if touches.size() > 1:
+				multi_touch = true
+
+	# PC: Mouse click
 	elif event is InputEventMouseButton:
-		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			select_province(event.position)
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				mouse_down = true
+				mouse_start_position = event.position
+				mouse_moved = false
+			else:
+				if mouse_down and not mouse_moved:
+					select_province(event.position)
+
+				mouse_down = false
+
+	# PC: Mouse movement
+	elif event is InputEventMouseMotion and mouse_down:
+		if mouse_start_position.distance_to(event.position) > DRAG_THRESHOLD:
+			mouse_moved = true
 
 
-func select_province(screen_position: Vector2):
+func select_province(screen_position: Vector2) -> void:
 	if database == null:
+		push_warning("Province database is not assigned!")
+		return
+
+	if texture == null:
+		push_warning("Province map texture is missing!")
 		return
 
 	var local_position = get_global_transform_with_canvas().affine_inverse() * screen_position
-
 	var rect = get_rect()
 
 	if not rect.has_point(local_position):
