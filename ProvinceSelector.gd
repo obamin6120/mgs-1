@@ -106,10 +106,9 @@ func select_province(screen_position: Vector2) -> void:
 	if flip_v:
 		uv.y = 1.0 - uv.y
 
-	var image = texture.get_image()
 
-	var px = int(uv.x * image.get_width())
-	var py = int(uv.y * image.get_height())
+	var px = int(uv.x * texture.get_width())
+	var py = int(uv.y * texture.get_height())
 
 	var province_id = database.get_province_id(px, py)
 
