@@ -57,3 +57,10 @@ func get_province_id(x: int, y: int) -> int:
 	var color = img.get_pixel(x, y)
 
 	return color_to_id.get(color.to_rgba32(), 0)
+
+
+func get_province_color(province_id: int) -> Color:
+	if province_id <= 0 or province_id > id_to_color.size():
+		return Color.TRANSPARENT
+
+	return id_to_color[province_id - 1]
