@@ -7,7 +7,7 @@
 script = ExtResource("2_i7s6n")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1952950748]
-position = Vector2(2803, 1203)
+position = Vector2(2800, 1200)
 texture = ExtResource("1_oabld")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1546792871]
