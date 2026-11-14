@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://ynayiqloolih" path="res://ProvinceDatabase.gd" id="3_xehqc"]
 [ext_resource type="Texture2D" uid="uid://bfe5bw6whgjmy" path="res://final map (1).png" id="6_bpugw"]
 [ext_resource type="Shader" uid="uid://bda80mx702fb" path="res://background.gdshader" id="6_gjjrj"]
+[ext_resource type="Texture2D" uid="uid://di3w2lu5a8jvp" path="res://colors of borders.png" id="6_vvxqx"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_bpugw"]
 shader = ExtResource("2_eq6nc")
@@ -44,8 +45,11 @@ position = Vector2(2800, 1200)
 texture = ExtResource("6_bpugw")
 
 [node name="PoliticalOverlay" type="Sprite2D" parent="." unique_id=1261223215]
+position = Vector2(2800, 1200)
+texture = ExtResource("6_vvxqx")
 
 [node name="SelectionOverlay" type="Sprite2D" parent="." unique_id=411127651]
+visible = false
 z_index = 10
 material = SubResource("ShaderMaterial_5iqjx")
 position = Vector2(2800, 1200)
@@ -54,3 +58,4 @@ texture = ExtResource("1_oabld")
 [node name="ProvenceDatabase" type="Node" parent="." unique_id=95425057]
 script = ExtResource("3_xehqc")
 province_map_texture = ExtResource("1_oabld")
+country_map_texture = ExtResource("6_vvxqx")
