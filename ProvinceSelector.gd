@@ -106,7 +106,6 @@ func select_province(screen_position: Vector2) -> void:
 	if flip_v:
 		uv.y = 1.0 - uv.y
 
-
 	var px = int(uv.x * texture.get_width())
 	var py = int(uv.y * texture.get_height())
 
@@ -115,8 +114,14 @@ func select_province(screen_position: Vector2) -> void:
 	if province_id != 0:
 		print("Selected Province ID: ", province_id)
 
-		# HIGHLIGHT SELECTED PROVINCE
-		var shader_material := material as ShaderMaterial
+		# HIGHLIGHT SELECTED PROVINCE ON SELECTION OVERLAY
+		var selection_overlay = get_node_or_null("../SelectionOverlay")
+
+		if selection_overlay == null:
+			push_warning("SelectionOverlay node not found!")
+			return
+
+		var shader_material := selection_overlay.material as ShaderMaterial
 
 		if shader_material:
 			shader_material.set_shader_parameter(
@@ -129,7 +134,7 @@ func select_province(screen_position: Vector2) -> void:
 				true
 			)
 		else:
-			push_warning("No ShaderMaterial found on Sprite2D!")
+			push_warning("No ShaderMaterial found on SelectionOverlay!")
 
 	else:
 		print("No province found.")
